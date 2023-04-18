@@ -9,8 +9,9 @@ import (
 )
 
 func main() {
-	rate := vegeta.Rate{Freq: 100, Per: time.Second} // taxa de solicitações por segundo
-	duration := 1 * time.Second                      // duração do teste
+	startTime := time.Now()
+	rate := vegeta.Rate{Freq: 50, Per: time.Second} // taxa de solicitações por segundo
+	duration := 10 * time.Second                    // duração do teste
 
 	// Criar um Targeter estático com a URL alvo
 	targeter := vegeta.NewStaticTargeter(vegeta.Target{
@@ -23,17 +24,19 @@ func main() {
 
 	// Realizar o ataque e coletar as métricas
 	var metrics vegeta.Metrics
-	for res := range attacker.Attack(targeter, rate, duration, "MeuNomeDeTeste") {
+	for res := range attacker.Attack(targeter, rate, duration, "PerformanceTest") {
 		metrics.Add(res)
 
 		// Verificar se há erro na resposta e logar apenas se houver
 		if res.Error != "" {
 			log.Printf("Response: %s, Code: %d, Error: %v\n", res.Timestamp, res.Code, res.Error)
 		} else {
-			log.Printf("Response: %s, Code: %d\n", res.Timestamp, res.Code)
+			log.Printf("StatusCode: %d\n", res.Code)
 		}
 	}
 	metrics.Close()
+	elapsedTime := time.Since(startTime) // Calcular o tempo decorrido
+	fmt.Printf("Tempo total de execução: %s\n", elapsedTime)
 
 	// Exibir as métricas
 	fmt.Printf("Requests: %d\n", metrics.Requests)
@@ -42,5 +45,5 @@ func main() {
 	fmt.Printf("Latency 50th percentile: %s\n", metrics.Latencies.P50)
 	fmt.Printf("Latency 90th percentile: %s\n", metrics.Latencies.P90)
 	fmt.Printf("Valor médio de bytes de entrada registrados: %.2f\n", metrics.BytesIn.Mean)
-	fmt.Printf("Bytes Out mean: %.2f\n", metrics.BytesOut.Mean)
+	fmt.Printf("Tempo total de execução: %.2f segundos\n", elapsedTime.Seconds())
 }
